@@ -40,7 +40,7 @@ class CNNBaseModel(object):
         :param data_format: default set to NHWC according tensorflow
         :return: tf.Tensor named ``output``
         """
-        with tf.variable_scope(name):
+        with tf.compat.v1.variable_scope (name):
             in_shape = inputdata.get_shape().as_list()
             channel_axis = 3 if data_format == 'NHWC' else 1
             in_channel = in_shape[channel_axis]
@@ -51,9 +51,9 @@ class CNNBaseModel(object):
             padding = padding.upper()
 
             if isinstance(kernel_size, list):
-                filter_shape = [kernel_size[0], kernel_size[1]] + [in_channel / split, out_channel]
+                filter_shape = [int(kernel_size[0]), int(kernel_size[1])] + [int(in_channel / split), int(out_channel)]
             else:
-                filter_shape = [kernel_size, kernel_size] + [in_channel / split, out_channel]
+                filter_shape = [int(kernel_size), int(kernel_size)] + [int(in_channel / split), int(out_channel)]
 
             if isinstance(stride, list):
                 strides = [1, stride[0], stride[1], 1] if data_format == 'NHWC' \
@@ -63,15 +63,15 @@ class CNNBaseModel(object):
                     else [1, 1, stride, stride]
 
             if w_init is None:
-                w_init = tf.contrib.layers.variance_scaling_initializer()
+                w_init = tf.keras.initializers.VarianceScaling()
             if b_init is None:
                 b_init = tf.constant_initializer()
 
-            w = tf.get_variable('W', filter_shape, initializer=w_init)
+            w = tf.compat.v1.get_variable('W', filter_shape, initializer=w_init)
             b = None
 
             if use_bias:
-                b = tf.get_variable('b', [out_channel], initializer=b_init)
+                b = tf.compat.v1.get_variable('b', [out_channel], initializer=b_init)
 
             if split == 1:
                 conv = tf.nn.conv2d(inputdata, w, strides, padding, data_format=data_format)
@@ -100,15 +100,15 @@ class CNNBaseModel(object):
         :param stride:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope (name_or_scope=name):
             in_shape = input_tensor.get_shape().as_list()
             in_channel = in_shape[3]
             padding = padding.upper()
 
             depthwise_filter_shape = [kernel_size, kernel_size] + [in_channel, depth_multiplier]
-            w_init = tf.contrib.layers.variance_scaling_initializer()
+            w_init = tf.keras.initializers.VarianceScaling()
 
-            depthwise_filter = tf.get_variable(
+            depthwise_filter = tf.compat.v1.get_variable(
                 name='depthwise_filter_w', shape=depthwise_filter_shape,
                 initializer=w_init
             )
@@ -174,7 +174,7 @@ class CNNBaseModel(object):
             strides = [1, stride, stride, 1] if data_format == 'NHWC' \
                 else [1, 1, stride, stride]
 
-        return tf.nn.max_pool(value=inputdata, ksize=kernel, strides=strides, padding=padding,
+        return tf.nn.max_pool(input=inputdata, ksize=kernel, strides=strides, padding=padding,
                               data_format=data_format, name=name)
 
     @staticmethod
@@ -198,7 +198,7 @@ class CNNBaseModel(object):
 
         strides = [1, stride, stride, 1] if data_format == 'NHWC' else [1, 1, stride, stride]
 
-        return tf.nn.avg_pool(value=inputdata, ksize=kernel, strides=strides, padding=padding,
+        return tf.nn.avg_pool(input=inputdata, ksize=kernel, strides=strides, padding=padding,
                               data_format=data_format, name=name)
 
     @staticmethod
@@ -245,12 +245,12 @@ class CNNBaseModel(object):
             new_shape = [1, channnel]
 
         if use_bias:
-            beta = tf.get_variable('beta', [channnel], initializer=tf.constant_initializer())
+            beta = tf.compat.v1.get_variable('beta', [channnel], initializer=tf.constant_initializer())
             beta = tf.reshape(beta, new_shape)
         else:
             beta = tf.zeros([1] * ndims, name='beta')
         if use_scale:
-            gamma = tf.get_variable('gamma', [channnel], initializer=tf.constant_initializer(1.0))
+            gamma = tf.compat.v1.get_variable('gamma', [channnel], initializer=tf.constant_initializer(1.0))
             gamma = tf.reshape(gamma, new_shape)
         else:
             gamma = tf.ones([1] * ndims, name='gamma')
@@ -288,9 +288,9 @@ class CNNBaseModel(object):
         if not use_affine:
             return tf.divide(inputdata - mean, tf.sqrt(var + epsilon), name='output')
 
-        beta = tf.get_variable('beta', [ch], initializer=tf.constant_initializer())
+        beta = tf.compat.v1.get_variable('beta', [ch], initializer=tf.constant_initializer())
         beta = tf.reshape(beta, new_shape)
-        gamma = tf.get_variable('gamma', [ch], initializer=tf.constant_initializer(1.0))
+        gamma = tf.compat.v1.get_variable('gamma', [ch], initializer=tf.constant_initializer(1.0))
         gamma = tf.reshape(gamma, new_shape)
         return tf.nn.batch_normalization(inputdata, mean, var, beta, gamma, epsilon, name=name)
 
@@ -328,7 +328,7 @@ class CNNBaseModel(object):
             inputdata = tf.reshape(inputdata, tf.stack([tf.shape(inputdata)[0], -1]))
 
         if w_init is None:
-            w_init = tf.contrib.layers.variance_scaling_initializer()
+            w_init = tf.keras.initializers.VarianceScaling()
         if b_init is None:
             b_init = tf.constant_initializer()
 
@@ -349,7 +349,7 @@ class CNNBaseModel(object):
         :return:
         """
 
-        return tf.layers.batch_normalization(inputs=inputdata, training=is_training, name=name, scale=scale)
+        return tf.compat.v1.layers.batch_normalization(inputs=inputdata, training=is_training, name=name, scale=scale)
 
     @staticmethod
     def layergn(inputdata, name, group_size=32, esp=1e-5):
@@ -361,7 +361,7 @@ class CNNBaseModel(object):
         :param esp:
         :return:
         """
-        with tf.variable_scope(name):
+        with tf.compat.v1.variable_scope (name):
             inputdata = tf.transpose(inputdata, [0, 3, 1, 2])
             n, c, h, w = inputdata.get_shape().as_list()
             group_size = min(group_size, c)
@@ -414,7 +414,7 @@ class CNNBaseModel(object):
         :param data_format: default set to NHWC according tensorflow
         :return: tf.Tensor named ``output``
         """
-        with tf.variable_scope(name):
+        with tf.compat.v1.variable_scope (name):
             in_shape = inputdata.get_shape().as_list()
             channel_axis = 3 if data_format == 'channels_last' else 1
             in_channel = in_shape[channel_axis]
@@ -423,7 +423,7 @@ class CNNBaseModel(object):
             padding = padding.upper()
 
             if w_init is None:
-                w_init = tf.contrib.layers.variance_scaling_initializer()
+                w_init = tf.keras.initializers.VarianceScaling()
             if b_init is None:
                 b_init = tf.constant_initializer()
 
@@ -453,7 +453,7 @@ class CNNBaseModel(object):
         :param name:
         :return:
         """
-        with tf.variable_scope(name):
+        with tf.compat.v1.variable_scope (name):
             in_shape = input_tensor.get_shape().as_list()
             in_channel = in_shape[3]
             assert in_channel is not None, "[Conv2D] Input cannot have unknown channel!"
@@ -466,15 +466,15 @@ class CNNBaseModel(object):
                 filter_shape = [k_size, k_size] + [in_channel, out_dims]
 
             if w_init is None:
-                w_init = tf.contrib.layers.variance_scaling_initializer()
+                w_init = tf.keras.initializers.VarianceScaling()
             if b_init is None:
                 b_init = tf.constant_initializer()
 
-            w = tf.get_variable('W', filter_shape, initializer=w_init)
+            w = tf.compat.v1.get_variable('W', filter_shape, initializer=w_init)
             b = None
 
             if use_bias:
-                b = tf.get_variable('b', [out_dims], initializer=b_init)
+                b = tf.compat.v1.get_variable('b', [out_dims], initializer=b_init)
 
             conv = tf.nn.atrous_conv2d(value=input_tensor, filters=w, rate=rate,
                                        padding=padding, name='dilation_conv')
@@ -506,7 +506,7 @@ class CNNBaseModel(object):
         def f2():
             return input_tensor
 
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope (name_or_scope=name):
 
             output = tf.cond(is_training, f1, f2)
 
@@ -521,5 +521,5 @@ class CNNBaseModel(object):
         :param name:
         :return:
         """
-        with tf.variable_scope(name):
+        with tf.compat.v1.variable_scope (name):
             return tf.nn.relu(inputdata) - alpha * tf.nn.relu(-inputdata)

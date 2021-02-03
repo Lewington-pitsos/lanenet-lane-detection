@@ -7,3 +7,9 @@ matplotlib
 opencv
 scikit_learn
 loguru
+opencv-python
+matplotlib
+pyyaml
+glog
+sklearn
+jupyter

@@ -82,7 +82,7 @@ class LaneNetTusimpleMultiTrainer(object):
         self._sess = tf.Session(config=sess_config)
 
         # define graph input tensor
-        with tf.variable_scope(name_or_scope='graph_input_node'):
+        with tf.compat.v1.variable_scope (name_or_scope='graph_input_node'):
             self._input_src_image_list = []
             self._input_binary_label_image_list = []
             self._input_instance_label_image_list = []
@@ -108,7 +108,7 @@ class LaneNetTusimpleMultiTrainer(object):
         batchnorm_updates = None
 
         # define learning rate
-        with tf.variable_scope('learning_rate'):
+        with tf.compat.v1.variable_scope ('learning_rate'):
             self._global_step = tf.Variable(1.0, dtype=tf.float32, trainable=False, name='global_step')
             self._val_global_step = tf.Variable(1.0, dtype=tf.float32, trainable=False, name='val_global_step')
             self._val_global_step_update = tf.assign_add(self._val_global_step, 1.0)
@@ -144,7 +144,7 @@ class LaneNetTusimpleMultiTrainer(object):
             raise NotImplementedError('Not support optimizer: {:s} for now'.format(self._optimizer_mode))
 
         # define distributed train op
-        with tf.variable_scope(tf.get_variable_scope()):
+        with tf.compat.v1.variable_scope (tf.compat.v1.get_variable_scope()):
             is_network_initialized = False
             for i in range(self._gpu_nums):
                 with tf.device('/gpu:{:d}'.format(i)):
@@ -182,7 +182,7 @@ class LaneNetTusimpleMultiTrainer(object):
         self._val_instance_loss = ret['discriminative_loss']
 
         # define moving average op
-        with tf.variable_scope(name_or_scope='moving_avg'):
+        with tf.compat.v1.variable_scope (name_or_scope='moving_avg'):
             if self._cfg.TRAIN.FREEZE_BN.ENABLE:
                 train_var_list = [
                     v for v in tf.trainable_variables() if 'beta' not in v.name and 'gamma' not in v.name
@@ -216,7 +216,7 @@ class LaneNetTusimpleMultiTrainer(object):
 
         # define miou
         if self._enable_miou:
-            with tf.variable_scope('miou'):
+            with tf.compat.v1.variable_scope ('miou'):
                 pred = tf.reshape(self._binary_prediciton, [-1, ])
                 gt = tf.reshape(self._input_binary_label_image_list[self._chief_gpu_index], [-1, ])
                 indices = tf.squeeze(tf.where(tf.less_equal(gt, self._cfg.DATASET.NUM_CLASSES - 1)), 1)
@@ -240,12 +240,12 @@ class LaneNetTusimpleMultiTrainer(object):
                 )
 
         # define saver and loader
-        with tf.variable_scope('loader_and_saver'):
+        with tf.compat.v1.variable_scope ('loader_and_saver'):
             self._net_var = [vv for vv in tf.global_variables() if 'lr' not in vv.name]
             self._saver = tf.train.Saver(max_to_keep=10)
 
         # define summary
-        with tf.variable_scope('summary'):
+        with tf.compat.v1.variable_scope ('summary'):
             summary_merge_list = [
                 tf.summary.scalar("learn_rate", self._learn_rate),
                 tf.summary.scalar("total_loss", self._loss),
@@ -331,7 +331,7 @@ class LaneNetTusimpleMultiTrainer(object):
         :param name:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope (name_or_scope=name):
             factor = tf.math.pow(self._init_learning_rate / self._warmup_init_learning_rate, 1.0 / warmup_steps)
             warmup_lr = self._warmup_init_learning_rate * tf.math.pow(factor, self._global_step)
         return warmup_lr

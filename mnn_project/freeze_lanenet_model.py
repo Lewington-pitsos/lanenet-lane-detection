@@ -44,19 +44,19 @@ def convert_ckpt_into_pb_file(ckpt_file_path, pb_file_path):
     :return:
     """
     # construct compute graph
-    with tf.variable_scope('lanenet'):
+    with tf.compat.v1.variable_scope ('lanenet'):
         input_tensor = tf.placeholder(dtype=tf.float32, shape=[1, 256, 512, 3], name='input_tensor')
 
     net = lanenet.LaneNet(phase='test', cfg=CFG)
     binary_seg_ret, instance_seg_ret = net.inference(input_tensor=input_tensor, name='LaneNet')
 
-    with tf.variable_scope('lanenet/'):
+    with tf.compat.v1.variable_scope ('lanenet/'):
         binary_seg_ret = tf.cast(binary_seg_ret, dtype=tf.float32)
         binary_seg_ret = tf.squeeze(binary_seg_ret, axis=0, name='final_binary_output')
         instance_seg_ret = tf.squeeze(instance_seg_ret, axis=0, name='final_pixel_embedding_output')
 
     # define moving average version of the learned variables for eval
-    with tf.variable_scope(name_or_scope='moving_avg'):
+    with tf.compat.v1.variable_scope (name_or_scope='moving_avg'):
         variable_averages = tf.train.ExponentialMovingAverage(
             CFG.SOLVER.MOVING_AVE_DECAY)
         variables_to_restore = variable_averages.variables_to_restore()

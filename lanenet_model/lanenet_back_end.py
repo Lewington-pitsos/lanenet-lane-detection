@@ -101,9 +101,9 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
         :param reuse:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name, reuse=reuse):
+        with tf.compat.v1.variable_scope (name_or_scope=name, reuse=reuse):
             # calculate class weighted binary seg loss
-            with tf.variable_scope(name_or_scope='binary_seg'):
+            with tf.compat.v1.variable_scope (name_or_scope='binary_seg'):
                 binary_label_onehot = tf.one_hot(
                     tf.reshape(
                         tf.cast(binary_label, tf.int32),
@@ -142,7 +142,7 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
                     raise NotImplementedError
 
             # calculate class weighted instance seg loss
-            with tf.variable_scope(name_or_scope='instance_seg'):
+            with tf.compat.v1.variable_scope (name_or_scope='instance_seg'):
 
                 pix_bn = self.layerbn(
                     inputdata=instance_seg_logits, is_training=self._is_training, name='pix_bn')
@@ -189,13 +189,13 @@ class LaneNetBackEnd(cnn_basenet.CNNBaseModel):
         :param reuse:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name, reuse=reuse):
+        with tf.compat.v1.variable_scope (name_or_scope=name, reuse=reuse):
 
-            with tf.variable_scope(name_or_scope='binary_seg'):
+            with tf.compat.v1.variable_scope (name_or_scope='binary_seg'):
                 binary_seg_score = tf.nn.softmax(logits=binary_seg_logits)
                 binary_seg_prediction = tf.argmax(binary_seg_score, axis=-1)
 
-            with tf.variable_scope(name_or_scope='instance_seg'):
+            with tf.compat.v1.variable_scope (name_or_scope='instance_seg'):
 
                 pix_bn = self.layerbn(
                     inputdata=instance_seg_logits, is_training=self._is_training, name='pix_bn')

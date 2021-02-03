@@ -75,7 +75,7 @@ class LaneNetTusimpleTrainer(object):
         self._sess = tf.Session(config=sess_config)
 
         # define graph input tensor
-        with tf.variable_scope(name_or_scope='graph_input_node'):
+        with tf.compat.v1.variable_scope (name_or_scope='graph_input_node'):
             self._input_src_image, self._input_binary_label_image, self._input_instance_label_image = \
                 self._train_dataset.next_batch(batch_size=self._batch_size)
 
@@ -102,7 +102,7 @@ class LaneNetTusimpleTrainer(object):
 
         # define miou
         if self._enable_miou:
-            with tf.variable_scope('miou'):
+            with tf.compat.v1.variable_scope ('miou'):
                 pred = tf.reshape(self._binary_prediciton, [-1, ])
                 gt = tf.reshape(self._input_binary_label_image, [-1, ])
                 indices = tf.squeeze(tf.where(tf.less_equal(gt, self._cfg.DATASET.NUM_CLASSES - 1)), 1)
@@ -115,7 +115,7 @@ class LaneNetTusimpleTrainer(object):
                 )
 
         # define learning rate
-        with tf.variable_scope('learning_rate'):
+        with tf.compat.v1.variable_scope ('learning_rate'):
             self._global_step = tf.Variable(1.0, dtype=tf.float32, trainable=False, name='global_step')
             warmup_steps = tf.constant(
                 self._warmup_epoches * self._steps_per_epoch, dtype=tf.float32, name='warmup_steps'
@@ -137,7 +137,7 @@ class LaneNetTusimpleTrainer(object):
             global_step_update = tf.assign_add(self._global_step, 1.0)
 
         # define moving average op
-        with tf.variable_scope(name_or_scope='moving_avg'):
+        with tf.compat.v1.variable_scope (name_or_scope='moving_avg'):
             if self._cfg.TRAIN.FREEZE_BN.ENABLE:
                 train_var_list = [
                     v for v in tf.trainable_variables() if 'beta' not in v.name and 'gamma' not in v.name
@@ -150,7 +150,7 @@ class LaneNetTusimpleTrainer(object):
             self._loader = tf.train.Saver(tf.moving_average_variables())
 
         # define training op
-        with tf.variable_scope(name_or_scope='train_step'):
+        with tf.compat.v1.variable_scope (name_or_scope='train_step'):
             if self._cfg.TRAIN.FREEZE_BN.ENABLE:
                 train_var_list = [
                     v for v in tf.trainable_variables() if 'beta' not in v.name and 'gamma' not in v.name
@@ -175,12 +175,12 @@ class LaneNetTusimpleTrainer(object):
                         self._train_op = tf.no_op()
 
         # define saver and loader
-        with tf.variable_scope('loader_and_saver'):
+        with tf.compat.v1.variable_scope ('loader_and_saver'):
             self._net_var = [vv for vv in tf.global_variables() if 'lr' not in vv.name]
             self._saver = tf.train.Saver(tf.global_variables(), max_to_keep=5)
 
         # define summary
-        with tf.variable_scope('summary'):
+        with tf.compat.v1.variable_scope ('summary'):
             summary_merge_list = [
                 tf.summary.scalar('learn_rate', self._learn_rate),
                 tf.summary.scalar('total_loss', self._loss),
@@ -215,7 +215,7 @@ class LaneNetTusimpleTrainer(object):
         :param name:
         :return:
         """
-        with tf.variable_scope(name_or_scope=name):
+        with tf.compat.v1.variable_scope (name_or_scope=name):
             factor = tf.math.pow(self._init_learning_rate / self._warmup_init_learning_rate, 1.0 / warmup_steps)
             warmup_lr = self._warmup_init_learning_rate * tf.math.pow(factor, self._global_step)
         return warmup_lr

@@ -1,0 +1,8 @@
+docker run --gpus all --privileged=true -td -p :7070:7070 --mount type=bind,source=/home/lewington/code/lanenet-lane-detection,target=/home/ 8a8486aa1902
+docker start 87bd6475db
+docker exec -it 87bd6475db bash
+
+jupyter notebook --ip 0.0.0.0 --port 7070 --no-browser --allow-root ../home/
+
+
+python tools/test_lanenet.py --weights_path model/tusimple_lanet/ --image_path data/tusimple_test_image/0.jpg
